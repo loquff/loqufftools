@@ -1,53 +1,3 @@
-import ctypes as C
-import os
-from tqdm import tqdm
-from loqufftools.hdf5_utils import *
-from slmcontrol import *
-import configparser
-import h5py
-from abc import ABC, abstractmethod
-import numpy as np
-from PIL import Image
-from multimethod import multimethod
-
-
-class Camera(ABC):
-    def __init__(self, resX, resY):
-        self.resX = resX
-        self.resY = resY
-
-    @abstractmethod
-    def capture(self):
-        pass
-
-    @abstractmethod
-    def close(self):
-        pass
-
-
-class TestCamera(Camera):
-    def __init__(self, resX, resY):
-        super().__init__(resX, resY)
-
-    @multimethod
-    def capture(self, saving_path: str):
-        image = Image.fromarray(np.random.randint(
-            0, 255, size=(self.resY, self.resX), dtype='uint8'))
-        image.save(saving_path)
-
-    @multimethod
-    def capture(self):
-        return np.random.randint(0, 255, size=(self.resY, self.resX), dtype='uint8')
-
-    def close(self):
-        pass
-
-
-"""
-Imaging Source Cameras
-"""
-
-
 try:
     # Import PyhtonNet
     import sys
@@ -74,8 +24,18 @@ except:
         Check https://github.com/TheImagingSource/IC-Imaging-Control-Samples/tree/master/Python/Python%20NET for more information.
         """))
 
+import loqufftools.cameras.AbstractCamera as AbstractCamera
+from multimethod import multimethod
+import ctypes as C
+from tqdm import tqdm
+from loqufftools.hdf5_utils import *
+from slmcontrol import *
+import configparser
+import h5py
+import numpy as np
 
-class ImagingSourceCamera(Camera):
+
+class ImagingSourceCamera(AbstractCamera.Camera):
     def __init__(self, resX, resY):
         super().__init__(resX, resY)
         self.imaging_control = TIS.Imaging.ICImagingControl()

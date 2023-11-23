@@ -1,3 +1,5 @@
 .vscode
 *device.xml
 *__pycache__
+*test.py
+*test.ipynb
