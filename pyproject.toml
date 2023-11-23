@@ -1,5 +1,5 @@
 [tool.poetry]
-name = "loquff"
+name = "loqufftools"
 version = "0.1.0"
 description = ""
 authors = ["Marcos Gil <marcosgildeoliveira@gmail.com>"]
