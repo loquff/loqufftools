@@ -6,11 +6,6 @@ except:
 
 import loqufftools.cameras.AbstractCamera as AbstractCamera
 from multimethod import multimethod
-from tqdm import tqdm
-from loqufftools.hdf5_utils import *
-from slmcontrol import *
-import configparser
-import h5py
 import numpy as np
 from PIL import Image
 
@@ -26,13 +21,16 @@ class XimeaCamera(AbstractCamera.Camera):
         self.camera.start_acquisition()
 
     @multimethod
-    def capture(self):
+    def capture(self, roi=None):
         self.camera.get_image(self.image)
-        return self.image.get_image_data_numpy()
+        if roi is None:
+            return self.image.get_image_data_numpy()
+        else:
+            return self.image.get_image_data_numpy()[roi[0]:roi[1], roi[2]:roi[3]]
 
     @multimethod
-    def capture(self, saving_path: str):
-        Image.fromarray(self.capture()).save(saving_path)
+    def capture(self, saving_path: str, roi=None):
+        Image.fromarray(self.capture(roi=roi)).save(saving_path)
 
     def set_exposure(self, exposure):
         self.camera.set_exposure(exposure)

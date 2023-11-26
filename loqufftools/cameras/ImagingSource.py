@@ -27,11 +27,6 @@ except:
 import loqufftools.cameras.AbstractCamera as AbstractCamera
 from multimethod import multimethod
 import ctypes as C
-from tqdm import tqdm
-from loqufftools.hdf5_utils import *
-from slmcontrol import *
-import configparser
-import h5py
 import numpy as np
 
 
@@ -78,54 +73,6 @@ class ImagingSourceCamera(AbstractCamera.Camera):
     def capture(self, saving_path: str, roi=None):
         image = self.imaging_control.Sink.SnapSingle(TimeSpan.FromSeconds(5))
         TIS.Imaging.FrameExtensions.SaveAsBitmap(image, saving_path)
-
-    def loop_capture_as_hdf5(self, saving_path, slm, config_path, source_key, saving_key, roi=None, calculate_mean=False):
-        try:
-            with h5py.File(saving_path, 'a') as file:
-                check_safety(file, saving_key)
-
-                config = configparser.ConfigParser()
-                config.read(config_path)
-                x, y = build_grid(config_path)
-
-                max = config['slm'].getint('max')
-                xoffset = config['input'].getint('xoffset')
-                yoffset = config['input'].getint('yoffset')
-                waist = config['input'].getfloat('waist')
-                xperiod = config['grating'].getfloat('xperiod')
-                yperiod = config['grating'].getfloat('yperiod')
-
-                input = hg(x, y, 0, 0, waist)
-
-                fields = file[source_key]
-                if roi == None:
-                    result = np.zeros(
-                        (fields.shape[0], self.resY, self.resX), dtype='uint8')
-                else:
-                    result = np.zeros(
-                        (fields.shape[0], roi[1]-roi[0], roi[3]-roi[2]), dtype='uint8')
-
-                for n, desired in tqdm(enumerate(fields)):
-                    holo = generate_hologram(
-                        desired, input, x, y, max, xperiod, yperiod, xoffset, yoffset)
-                    slm.updateArray(holo)
-
-                    result[n, :, :] = self.capture(roi=roi)
-
-                file.create_dataset(saving_key, data=result)
-
-            if calculate_mean:
-                directory_path, old_filename = os.path.split(saving_path)
-                new_path = os.path.join(directory_path, 'mean_' + old_filename)
-                with h5py.File(new_path, 'a') as file:
-                    check_safety(file, saving_key)
-                    file[saving_key] = np.mean(result, axis=0)
-
-        except Exception as e:
-            print(e)
-        finally:
-            self.close()
-            file.close()
 
     def close(self):
         self.imaging_control.LiveStop()
