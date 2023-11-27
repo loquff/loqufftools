@@ -29,7 +29,7 @@ class TestCamera(Camera):
 
     @multimethod
     def capture(self, roi=None):
-        size = (self.resX, self.resY) if roi is None else (
+        size = (self.resY, self.resX) if roi is None else (
             roi[1]-roi[0], roi[3]-roi[2])
         return np.random.randint(0, 255, size=size, dtype='uint8')
 
