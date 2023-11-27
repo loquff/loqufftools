@@ -23,14 +23,15 @@ class TestCamera(Camera):
         super().__init__(resX, resY)
 
     @multimethod
-    def capture(self, saving_path: str):
-        image = Image.fromarray(np.random.randint(
-            0, 255, size=(self.resY, self.resX), dtype='uint8'))
+    def capture(self, saving_path: str, roi=None):
+        image = self.capture(roi=roi)
         image.save(saving_path)
 
     @multimethod
-    def capture(self):
-        return np.random.randint(0, 255, size=(self.resY, self.resX), dtype='uint8')
+    def capture(self, roi=None):
+        size = (self.resX, self.resY) if roi is None else (
+            roi[1]-roi[0], roi[3]-roi[2])
+        return np.random.randint(0, 255, size=size, dtype='uint8')
 
     def close(self):
         pass
